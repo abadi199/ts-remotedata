@@ -1,6 +1,6 @@
 {
   "name": "@abadi199/remotedata",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A DataType Representing Remote Data",
   "main": "dist/index.js",
   "types": "src/index.ts",
