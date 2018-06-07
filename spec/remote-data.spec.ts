@@ -10,6 +10,7 @@ describe("RemoteData", () => {
   describe("notAsked", () => {
     it("should create notAsked", () => {
       const remoteData = notAsked();
+      console.log(typeof remoteData);
       expect(remoteData.kind).toEqual(RemoteDataKind.NotAsked);
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();

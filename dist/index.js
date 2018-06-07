@@ -21,6 +21,7 @@ var NotAsked = /** @class */ (function () {
     };
     return NotAsked;
 }());
+exports.NotAsked = NotAsked;
 var notAskedConst = new NotAsked();
 function notAsked() {
     return notAskedConst;
@@ -38,6 +39,7 @@ var Loading = /** @class */ (function () {
     };
     return Loading;
 }());
+exports.Loading = Loading;
 var loadingConst = new Loading();
 var Reloading = /** @class */ (function () {
     function Reloading(value) {
@@ -52,6 +54,7 @@ var Reloading = /** @class */ (function () {
     };
     return Reloading;
 }());
+exports.Reloading = Reloading;
 function loading(previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
@@ -86,6 +89,7 @@ var Success = /** @class */ (function () {
     };
     return Success;
 }());
+exports.Success = Success;
 function success(value) {
     return new Success(value);
 }
@@ -104,6 +108,7 @@ var Error = /** @class */ (function () {
     };
     return Error;
 }());
+exports.Error = Error;
 var ErrorWithData = /** @class */ (function () {
     // tslint:disable-next-line:no-shadowed-variable
     function ErrorWithData(error, value) {
@@ -119,6 +124,7 @@ var ErrorWithData = /** @class */ (function () {
     };
     return ErrorWithData;
 }());
+exports.ErrorWithData = ErrorWithData;
 function error(
 // tslint:disable-next-line:no-shadowed-variable
 error, previous) {

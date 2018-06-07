@@ -7,12 +7,12 @@ export enum RemoteDataKind {
   ErrorWithData = 6
 }
 
-interface IRemoteData {
+export interface IRemoteData {
   kind: RemoteDataKind;
   isLoading(): boolean;
   hasData(): boolean;
 }
-class NotAsked implements IRemoteData {
+export class NotAsked implements IRemoteData {
   readonly kind = RemoteDataKind.NotAsked;
   isLoading() {
     return false;
@@ -28,7 +28,7 @@ export function notAsked(): NotAsked {
   return notAskedConst;
 }
 
-class Loading {
+export class Loading {
   readonly kind = RemoteDataKind.Loading;
   isLoading() {
     return true;
@@ -39,7 +39,7 @@ class Loading {
 }
 const loadingConst = new Loading();
 
-class Reloading<data> {
+export class Reloading<data> {
   readonly kind = RemoteDataKind.Reloading;
   isLoading() {
     return true;
@@ -71,7 +71,7 @@ export function loading<data, e>(
   }
 }
 
-class Success<data> {
+export class Success<data> {
   readonly kind = RemoteDataKind.Success;
   isLoading() {
     return false;
@@ -85,7 +85,7 @@ export function success<data>(value: data): Success<data> {
   return new Success(value);
 }
 
-class Error<e> {
+export class Error<e> {
   readonly kind = RemoteDataKind.Error;
   isLoading() {
     return false;
@@ -97,7 +97,7 @@ class Error<e> {
   constructor(public error: e) {}
 }
 
-class ErrorWithData<e, data> {
+export class ErrorWithData<e, data> {
   readonly kind = RemoteDataKind.ErrorWithData;
   isLoading() {
     return false;

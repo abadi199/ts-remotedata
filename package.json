@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "description": "A DataType Representing Remote Data",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "src/index.ts",
   "scripts": {
     "build": "tput clear && rm -rf dist && tsc",
     "test": "tput clear && jasmine-ts"
