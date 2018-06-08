@@ -24,6 +24,10 @@ export class NotAsked implements IRemoteData {
 
 const notAskedConst = new NotAsked();
 
+/**
+ * Create NotAsked
+ * @returns NotAsked
+ */
 export function notAsked(): NotAsked {
   return notAskedConst;
 }
@@ -49,6 +53,12 @@ export class Reloading<data> {
   }
   constructor(public value: data) {}
 }
+
+/**
+ * Create either a Loading or Reloading
+ * @param  {RemoteData<data, e> | null} previous - previous remote data or null
+ * @returns Loading
+ */
 export function loading<data, e>(
   previous: RemoteData<data, e> | null = null
 ): Loading | Reloading<data> {
@@ -81,6 +91,11 @@ export class Success<data> {
   }
   constructor(public value: data) {}
 }
+/**
+ * Create a Success
+ * @param  {data} value - A success data
+ * @returns Success
+ */
 export function success<data>(value: data): Success<data> {
   return new Success(value);
 }
@@ -108,6 +123,13 @@ export class ErrorWithData<e, data> {
   // tslint:disable-next-line:no-shadowed-variable
   constructor(public error: e, public value: data) {}
 }
+
+/**
+ * Create either an Error or ErrorWithData
+ * @param  {e} error
+ * @param  {RemoteData<data, e> | null} previous - previous remote data or null.
+ * @returns Error
+ */
 export function error<e, data>(
   // tslint:disable-next-line:no-shadowed-variable
   error: e,
@@ -139,3 +161,32 @@ export type RemoteData<data, e> =
   | Success<data>
   | Error<e>
   | ErrorWithData<e, data>;
+
+/**
+ * Update the `prev` RemoteData with the `next` data/error. This guarantees we don't lose previous data when updating the state.
+ * @param  {RemoteData<data, e>} prev - the old remote data
+ * @param  {RemoteData<data, e>} next - the new remote data
+ * @returns RemoteData<data, e>
+ */
+export function update<data, e>(prev: RemoteData<data, e>, next: RemoteData<data, e>): RemoteData<data, e> {
+  switch (next.kind) {
+    case RemoteDataKind.Error: {
+      return error(next.error, prev);
+    }
+    case RemoteDataKind.Loading: {
+      return loading(prev);
+    }
+    case RemoteDataKind.ErrorWithData: {
+      return next;
+    }
+    case RemoteDataKind.NotAsked: {
+      return next;
+    }
+    case RemoteDataKind.Reloading: {
+      return next;
+    }
+    case RemoteDataKind.Success: {
+      return next;
+    }
+  }
+}

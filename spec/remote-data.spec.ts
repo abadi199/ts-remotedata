@@ -3,7 +3,8 @@ import {
   RemoteDataKind,
   success,
   error,
-  notAsked
+  notAsked,
+  update
 } from "../src/index";
 
 describe("RemoteData", () => {
@@ -157,5 +158,73 @@ describe("RemoteData", () => {
         expect(remoteData.kind).toEqual(RemoteDataKind.ErrorWithData);
       }
     });
+  });
+});
+
+describe("update", () => {
+  it("should keep prev data when given an error with no data", () => {
+    const data = "Data";
+    const err = "Error"
+    const prev = success(data);
+    const next = error(err);
+    const actual = update(prev, next);
+    if (actual.kind === RemoteDataKind.ErrorWithData) {
+      expect(actual.value).toEqual(data);
+      expect(actual.error).toEqual(err); 
+    } else {
+      expect(actual.kind).toEqual(RemoteDataKind.ErrorWithData)
+    }
+  });
+  it("should keep prev data when given a loading", () => {
+    const data = "Data";
+    const prev = success(data);
+    const next = loading();
+    const actual = update(prev, next);
+    if (actual.kind === RemoteDataKind.Reloading) {
+      expect(actual.value).toEqual(data);
+    } else {
+      expect(actual.kind).toEqual(RemoteDataKind.Reloading)
+    }
+  });
+  it("should keep next when given a success", () => {
+    const data = "Data";
+    const prev = success("Old");
+    const next = success(data);
+    const actual = update(prev, next);
+    if (actual.kind === RemoteDataKind.Success) {
+      expect(actual.value).toEqual(data);
+    } else {
+      expect(actual.kind).toEqual(RemoteDataKind.Success)
+    }
+  });
+  it("should keep next when given an error with data", () => {
+    const data = "Data";
+    const err = "Error"
+    const prev = success("Old");
+    const next = error(err, success(data));
+    const actual = update(prev, next);
+    if (actual.kind === RemoteDataKind.ErrorWithData) {
+      expect(actual.value).toEqual(data);
+      expect(actual.error).toEqual(err);
+    } else {
+      expect(actual.kind).toEqual(RemoteDataKind.ErrorWithData)
+    }
+  });
+  it("should keep next when given a not asked", () => {
+    const prev = success("Old");
+    const next = notAsked();
+    const actual = update(prev, next);
+    expect(actual.kind).toEqual(RemoteDataKind.NotAsked)
+  });
+  it("should keep prev data when given a reloading", () => {
+    const data = "Data";
+    const prev = success("Old");
+    const next = loading(success(data));
+    const actual = update(prev, next);
+    if (actual.kind === RemoteDataKind.Reloading) {
+      expect(actual.value).toEqual(data);
+    } else {
+      expect(actual.kind).toEqual(RemoteDataKind.Reloading)
+    }
   });
 });

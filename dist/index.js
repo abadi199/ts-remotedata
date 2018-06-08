@@ -23,6 +23,10 @@ var NotAsked = /** @class */ (function () {
 }());
 exports.NotAsked = NotAsked;
 var notAskedConst = new NotAsked();
+/**
+ * Create NotAsked
+ * @returns NotAsked
+ */
 function notAsked() {
     return notAskedConst;
 }
@@ -55,6 +59,11 @@ var Reloading = /** @class */ (function () {
     return Reloading;
 }());
 exports.Reloading = Reloading;
+/**
+ * Create either a Loading or Reloading
+ * @param  {RemoteData<data, e> | null} previous - previous remote data or null
+ * @returns Loading
+ */
 function loading(previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
@@ -90,6 +99,11 @@ var Success = /** @class */ (function () {
     return Success;
 }());
 exports.Success = Success;
+/**
+ * Create a Success
+ * @param  {data} value - A success data
+ * @returns Success
+ */
 function success(value) {
     return new Success(value);
 }
@@ -125,6 +139,12 @@ var ErrorWithData = /** @class */ (function () {
     return ErrorWithData;
 }());
 exports.ErrorWithData = ErrorWithData;
+/**
+ * Create either an Error or ErrorWithData
+ * @param  {e} error
+ * @param  {RemoteData<data, e> | null} previous - previous remote data or null.
+ * @returns Error
+ */
 function error(
 // tslint:disable-next-line:no-shadowed-variable
 error, previous) {
@@ -148,3 +168,32 @@ error, previous) {
     }
 }
 exports.error = error;
+/**
+ * Update the `prev` RemoteData with the `next` data/error. This guarantees we don't lose previous data when updating the state.
+ * @param  {RemoteData<data, e>} prev - the old remote data
+ * @param  {RemoteData<data, e>} next - the new remote data
+ * @returns RemoteData<data, e>
+ */
+function update(prev, next) {
+    switch (next.kind) {
+        case RemoteDataKind.Error: {
+            return error(next.error, prev);
+        }
+        case RemoteDataKind.Loading: {
+            return loading(prev);
+        }
+        case RemoteDataKind.ErrorWithData: {
+            return next;
+        }
+        case RemoteDataKind.NotAsked: {
+            return next;
+        }
+        case RemoteDataKind.Reloading: {
+            return next;
+        }
+        case RemoteDataKind.Success: {
+            return next;
+        }
+    }
+}
+exports.update = update;
