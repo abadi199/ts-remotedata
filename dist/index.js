@@ -17,12 +17,14 @@ var NotAsked = /** @class */ (function () {
         this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    NotAsked.prototype.map = function (_f) {
+        return notAsked();
+    };
     return NotAsked;
 }());
 exports.NotAsked = NotAsked;
-var notAskedConst = new NotAsked();
 function notAsked() {
-    return notAskedConst;
+    return new NotAsked();
 }
 exports.notAsked = notAsked;
 var Loading = /** @class */ (function () {
@@ -33,10 +35,12 @@ var Loading = /** @class */ (function () {
         this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    Loading.prototype.map = function (_f) {
+        return loading();
+    };
     return Loading;
 }());
 exports.Loading = Loading;
-var loadingConst = new Loading();
 var Reloading = /** @class */ (function () {
     function Reloading(value) {
         this.value = value;
@@ -46,28 +50,32 @@ var Reloading = /** @class */ (function () {
         this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Reloading.prototype.map = function (f) {
+        return new Reloading(f(this.value));
+    };
     return Reloading;
 }());
 exports.Reloading = Reloading;
 function loading(previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
-        return loadingConst;
+        return loading();
     }
     switch (previous.kind) {
         case RemoteDataKind.Error:
-            return loadingConst;
+            return loading();
         case RemoteDataKind.ErrorWithData:
             return new Reloading(previous.value);
         case RemoteDataKind.Loading:
             return previous;
         case RemoteDataKind.NotAsked:
-            return loadingConst;
+            return loading();
         case RemoteDataKind.Reloading:
             return previous;
         case RemoteDataKind.Success:
             return new Reloading(previous.value);
     }
+    return loading();
 }
 exports.loading = loading;
 var Success = /** @class */ (function () {
@@ -79,6 +87,9 @@ var Success = /** @class */ (function () {
         this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Success.prototype.map = function (f) {
+        return success(f(this.value));
+    };
     return Success;
 }());
 exports.Success = Success;
@@ -95,6 +106,9 @@ var Error = /** @class */ (function () {
         this.hasData = function () { return false; };
         this.hasError = function () { return true; };
     }
+    Error.prototype.map = function (_f) {
+        return error(this.error);
+    };
     return Error;
 }());
 exports.Error = Error;
@@ -132,5 +146,6 @@ error, previous) {
         case RemoteDataKind.Success:
             return new ErrorWithData(error, previous.value);
     }
+    return new Error(error);
 }
 exports.error = error;

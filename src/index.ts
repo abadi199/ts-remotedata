@@ -7,100 +7,114 @@ export enum RemoteDataKind {
   ErrorWithData = 6
 }
 
-export interface IRemoteData {
+export interface IRemoteData<data, e> {
   kind: RemoteDataKind;
   isNotAsked(): boolean;
   isLoading(): boolean;
   hasError(): boolean;
   hasData(): boolean;
+  map<b>(f: (data: data) => b): RemoteData<b, e>;
 }
-export class NotAsked implements IRemoteData {
+export class NotAsked<data, error> implements IRemoteData<data, error> {
   readonly kind = RemoteDataKind.NotAsked;
   isNotAsked = () => true;
   isLoading = () => false;
   hasData = () => false;
   hasError = () => false;
+  map<b>(_f: (data: data) => b): RemoteData<b, error> {
+    return notAsked();
+  }
 }
 
-const notAskedConst = new NotAsked();
-
-export function notAsked(): NotAsked {
-  return notAskedConst;
+export function notAsked<data, error>(): NotAsked<data, error> {
+  return new NotAsked<data, error>();
 }
 
-export class Loading {
+export class Loading<data, error> implements IRemoteData<data, error> {
   readonly kind = RemoteDataKind.Loading;
   isNotAsked = () => false;
   isLoading = () => true;
   hasData = () => false;
   hasError = () => false;
+  map<b>(_f: (data: data) => b): RemoteData<b, error> {
+    return loading();
+  }
 }
-const loadingConst = new Loading();
 
-export class Reloading<data> {
+export class Reloading<data, error> implements IRemoteData<data, error> {
   readonly kind = RemoteDataKind.Reloading;
+  constructor(public value: data) {}
   isNotAsked = () => false;
   isLoading = () => true;
   hasData = () => true;
   hasError = () => false;
-  constructor(public value: data) {}
+  map<b>(f: (data: data) => b): RemoteData<b, error> {
+    return new Reloading(f(this.value));
+  }
 }
-export function loading<data, e>(
-  previous: RemoteData<data, e> | null = null
-): Loading | Reloading<data> {
+export function loading<data, error>(
+  previous: RemoteData<data, error> | null = null
+): Loading<data, error> | Reloading<data, error> {
   if (previous === null) {
-    return loadingConst;
+    return loading();
   }
   switch (previous.kind) {
     case RemoteDataKind.Error:
-      return loadingConst;
+      return loading();
     case RemoteDataKind.ErrorWithData:
       return new Reloading(previous.value);
     case RemoteDataKind.Loading:
       return previous;
     case RemoteDataKind.NotAsked:
-      return loadingConst;
+      return loading();
     case RemoteDataKind.Reloading:
       return previous;
     case RemoteDataKind.Success:
       return new Reloading(previous.value);
   }
+  return loading();
 }
 
-export class Success<data> {
+export class Success<data, error> implements IRemoteData<data, error> {
+  constructor(public value: data) {}
   readonly kind = RemoteDataKind.Success;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => true;
   hasError = () => false;
-  constructor(public value: data) {}
+  map<b>(f: (data: data) => b): RemoteData<b, error> {
+    return success(f(this.value));
+  }
 }
-export function success<data>(value: data): Success<data> {
+export function success<data, error>(value: data): Success<data, error> {
   return new Success(value);
 }
 
-export class Error<e> {
+export class Error<data, error> implements IRemoteData<data, error> {
+  constructor(public error: error) {}
   readonly kind = RemoteDataKind.Error;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => false;
   hasError = () => true;
-  constructor(public error: e) {}
+  map<b>(_f: (data: data) => b): RemoteData<b, error> {
+    return error(this.error);
+  }
 }
 
-export class ErrorWithData<e, data> {
+export class ErrorWithData<data, error> {
   readonly kind = RemoteDataKind.ErrorWithData;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => true;
   hasError = () => true;
-  constructor(public error: e, public value: data) {}
+  constructor(public error: error, public value: data) {}
 }
-export function error<e, data>(
+export function error<data, error>(
   // tslint:disable-next-line:no-shadowed-variable
-  error: e,
-  previous: RemoteData<data, e> | null = null
-): Error<e> | ErrorWithData<e, data> {
+  error: error,
+  previous: RemoteData<data, error> | null = null
+): Error<data, error> | ErrorWithData<data, error> {
   if (previous === null) {
     return new Error(error);
   }
@@ -118,12 +132,14 @@ export function error<e, data>(
     case RemoteDataKind.Success:
       return new ErrorWithData(error, previous.value);
   }
+
+  return new Error(error);
 }
 
-export type RemoteData<data, e> =
-  | NotAsked
-  | Loading
-  | Reloading<data>
-  | Success<data>
-  | Error<e>
-  | ErrorWithData<e, data>;
+export type RemoteData<data, error> =
+  | NotAsked<data, error>
+  | Loading<data, error>
+  | Reloading<data, error>
+  | Success<data, error>
+  | Error<data, error>
+  | ErrorWithData<data, error>;
