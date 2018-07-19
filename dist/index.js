@@ -6,8 +6,8 @@ var RemoteDataKind;
     RemoteDataKind[RemoteDataKind["Loading"] = 2] = "Loading";
     RemoteDataKind[RemoteDataKind["Reloading"] = 3] = "Reloading";
     RemoteDataKind[RemoteDataKind["Success"] = 4] = "Success";
-    RemoteDataKind[RemoteDataKind["Error"] = 5] = "Error";
-    RemoteDataKind[RemoteDataKind["ErrorWithData"] = 6] = "ErrorWithData";
+    RemoteDataKind[RemoteDataKind["Failure"] = 5] = "Failure";
+    RemoteDataKind[RemoteDataKind["FailureWithData"] = 6] = "FailureWithData";
 })(RemoteDataKind = exports.RemoteDataKind || (exports.RemoteDataKind = {}));
 var NotAsked = /** @class */ (function () {
     function NotAsked() {
@@ -62,9 +62,9 @@ function loading(previous) {
         return loading();
     }
     switch (previous.kind) {
-        case RemoteDataKind.Error:
+        case RemoteDataKind.Failure:
             return loading();
-        case RemoteDataKind.ErrorWithData:
+        case RemoteDataKind.FailureWithData:
             return new Reloading(previous.value);
         case RemoteDataKind.Loading:
             return previous;
@@ -97,55 +97,53 @@ function success(value) {
     return new Success(value);
 }
 exports.success = success;
-var Error = /** @class */ (function () {
-    function Error(error) {
+var Failure = /** @class */ (function () {
+    function Failure(error) {
         this.error = error;
-        this.kind = RemoteDataKind.Error;
+        this.kind = RemoteDataKind.Failure;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
         this.hasData = function () { return false; };
         this.hasError = function () { return true; };
     }
-    Error.prototype.map = function (_f) {
-        return error(this.error);
+    Failure.prototype.map = function (_f) {
+        return failure(this.error);
     };
-    return Error;
+    return Failure;
 }());
-exports.Error = Error;
-var ErrorWithData = /** @class */ (function () {
-    function ErrorWithData(error, value) {
+exports.Failure = Failure;
+var FailureWithData = /** @class */ (function () {
+    function FailureWithData(error, value) {
         this.error = error;
         this.value = value;
-        this.kind = RemoteDataKind.ErrorWithData;
+        this.kind = RemoteDataKind.FailureWithData;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
         this.hasData = function () { return true; };
         this.hasError = function () { return true; };
     }
-    return ErrorWithData;
+    return FailureWithData;
 }());
-exports.ErrorWithData = ErrorWithData;
-function error(
-// tslint:disable-next-line:no-shadowed-variable
-error, previous) {
+exports.FailureWithData = FailureWithData;
+function failure(error, previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
-        return new Error(error);
+        return new Failure(error);
     }
     switch (previous.kind) {
-        case RemoteDataKind.Error:
-            return new Error(error);
-        case RemoteDataKind.ErrorWithData:
-            return new ErrorWithData(error, previous.value);
+        case RemoteDataKind.Failure:
+            return new Failure(error);
+        case RemoteDataKind.FailureWithData:
+            return new FailureWithData(error, previous.value);
         case RemoteDataKind.Loading:
-            return new Error(error);
+            return new Failure(error);
         case RemoteDataKind.NotAsked:
-            return new Error(error);
+            return new Failure(error);
         case RemoteDataKind.Reloading:
-            return new ErrorWithData(error, previous.value);
+            return new FailureWithData(error, previous.value);
         case RemoteDataKind.Success:
-            return new ErrorWithData(error, previous.value);
+            return new FailureWithData(error, previous.value);
     }
-    return new Error(error);
+    return new Failure(error);
 }
-exports.error = error;
+exports.failure = failure;

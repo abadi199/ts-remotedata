@@ -3,65 +3,65 @@ export enum RemoteDataKind {
   Loading = 2,
   Reloading = 3,
   Success = 4,
-  Error = 5,
-  ErrorWithData = 6
+  Failure = 5,
+  FailureWithData = 6
 }
 
-export interface IRemoteData<data, e> {
+export interface IRemoteData<T, E> {
   kind: RemoteDataKind;
   isNotAsked(): boolean;
   isLoading(): boolean;
   hasError(): boolean;
   hasData(): boolean;
-  map<b>(f: (data: data) => b): RemoteData<b, e>;
+  map<U>(f: (data: T) => U): RemoteData<U, E>;
 }
-export class NotAsked<data, error> implements IRemoteData<data, error> {
+export class NotAsked<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.NotAsked;
   isNotAsked = () => true;
   isLoading = () => false;
   hasData = () => false;
   hasError = () => false;
-  map<b>(_f: (data: data) => b): RemoteData<b, error> {
+  map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return notAsked();
   }
 }
 
-export function notAsked<data, error>(): NotAsked<data, error> {
-  return new NotAsked<data, error>();
+export function notAsked<T, E>(): NotAsked<T, E> {
+  return new NotAsked<T, E>();
 }
 
-export class Loading<data, error> implements IRemoteData<data, error> {
+export class Loading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Loading;
   isNotAsked = () => false;
   isLoading = () => true;
   hasData = () => false;
   hasError = () => false;
-  map<b>(_f: (data: data) => b): RemoteData<b, error> {
+  map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return loading();
   }
 }
 
-export class Reloading<data, error> implements IRemoteData<data, error> {
+export class Reloading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Reloading;
-  constructor(public value: data) {}
+  constructor(public value: T) {}
   isNotAsked = () => false;
   isLoading = () => true;
   hasData = () => true;
   hasError = () => false;
-  map<b>(f: (data: data) => b): RemoteData<b, error> {
+  map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new Reloading(f(this.value));
   }
 }
-export function loading<data, error>(
-  previous: RemoteData<data, error> | null = null
-): Loading<data, error> | Reloading<data, error> {
+export function loading<T, E>(
+  previous: RemoteData<T, E> | null = null
+): Loading<T, E> | Reloading<T, E> {
   if (previous === null) {
     return loading();
   }
   switch (previous.kind) {
-    case RemoteDataKind.Error:
+    case RemoteDataKind.Failure:
       return loading();
-    case RemoteDataKind.ErrorWithData:
+    case RemoteDataKind.FailureWithData:
       return new Reloading(previous.value);
     case RemoteDataKind.Loading:
       return previous;
@@ -75,71 +75,70 @@ export function loading<data, error>(
   return loading();
 }
 
-export class Success<data, error> implements IRemoteData<data, error> {
-  constructor(public value: data) {}
+export class Success<T, E> implements IRemoteData<T, E> {
+  constructor(public value: T) {}
   readonly kind = RemoteDataKind.Success;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => true;
   hasError = () => false;
-  map<b>(f: (data: data) => b): RemoteData<b, error> {
+  map<U>(f: (data: T) => U): RemoteData<U, E> {
     return success(f(this.value));
   }
 }
-export function success<data, error>(value: data): Success<data, error> {
+export function success<T, E>(value: T): Success<T, E> {
   return new Success(value);
 }
 
-export class Error<data, error> implements IRemoteData<data, error> {
-  constructor(public error: error) {}
-  readonly kind = RemoteDataKind.Error;
+export class Failure<T, E> implements IRemoteData<T, E> {
+  constructor(public error: E) {}
+  readonly kind = RemoteDataKind.Failure;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => false;
   hasError = () => true;
-  map<b>(_f: (data: data) => b): RemoteData<b, error> {
-    return error(this.error);
+  map<U>(_f: (data: T) => U): RemoteData<U, E> {
+    return failure(this.error);
   }
 }
 
-export class ErrorWithData<data, error> {
-  readonly kind = RemoteDataKind.ErrorWithData;
+export class FailureWithData<T, E> {
+  readonly kind = RemoteDataKind.FailureWithData;
   isNotAsked = () => false;
   isLoading = () => false;
   hasData = () => true;
   hasError = () => true;
-  constructor(public error: error, public value: data) {}
+  constructor(public error: E, public value: T) {}
 }
-export function error<data, error>(
-  // tslint:disable-next-line:no-shadowed-variable
-  error: error,
-  previous: RemoteData<data, error> | null = null
-): Error<data, error> | ErrorWithData<data, error> {
+export function failure<T, E>(
+  error: E,
+  previous: RemoteData<T, E> | null = null
+): Failure<T, E> | FailureWithData<T, E> {
   if (previous === null) {
-    return new Error(error);
+    return new Failure(error);
   }
   switch (previous.kind) {
-    case RemoteDataKind.Error:
-      return new Error(error);
-    case RemoteDataKind.ErrorWithData:
-      return new ErrorWithData(error, previous.value);
+    case RemoteDataKind.Failure:
+      return new Failure(error);
+    case RemoteDataKind.FailureWithData:
+      return new FailureWithData(error, previous.value);
     case RemoteDataKind.Loading:
-      return new Error(error);
+      return new Failure(error);
     case RemoteDataKind.NotAsked:
-      return new Error(error);
+      return new Failure(error);
     case RemoteDataKind.Reloading:
-      return new ErrorWithData(error, previous.value);
+      return new FailureWithData(error, previous.value);
     case RemoteDataKind.Success:
-      return new ErrorWithData(error, previous.value);
+      return new FailureWithData(error, previous.value);
   }
 
-  return new Error(error);
+  return new Failure(error);
 }
 
-export type RemoteData<data, error> =
-  | NotAsked<data, error>
-  | Loading<data, error>
-  | Reloading<data, error>
-  | Success<data, error>
-  | Error<data, error>
-  | ErrorWithData<data, error>;
+export type RemoteData<T, E> =
+  | NotAsked<T, E>
+  | Loading<T, E>
+  | Reloading<T, E>
+  | Success<T, E>
+  | Failure<T, E>
+  | FailureWithData<T, E>;
