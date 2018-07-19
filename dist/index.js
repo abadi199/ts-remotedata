@@ -86,23 +86,23 @@ exports.Reloading = Reloading;
 function loading(previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
-        return loading();
+        return new Loading();
     }
     switch (previous.kind) {
         case RemoteDataKind.Failure:
-            return loading();
+            return new Loading();
         case RemoteDataKind.FailureWithData:
             return new Reloading(previous.data);
         case RemoteDataKind.Loading:
             return previous;
         case RemoteDataKind.NotAsked:
-            return loading();
+            return new Loading();
         case RemoteDataKind.Reloading:
             return previous;
         case RemoteDataKind.Success:
             return new Reloading(previous.data);
     }
-    return loading();
+    return new Loading();
 }
 exports.loading = loading;
 var Success = /** @class */ (function () {
