@@ -12,13 +12,11 @@ var RemoteDataKind;
 var NotAsked = /** @class */ (function () {
     function NotAsked() {
         this.kind = RemoteDataKind.NotAsked;
+        this.isNotAsked = function () { return true; };
+        this.isLoading = function () { return false; };
+        this.hasData = function () { return false; };
+        this.hasError = function () { return false; };
     }
-    NotAsked.prototype.isLoading = function () {
-        return false;
-    };
-    NotAsked.prototype.hasData = function () {
-        return false;
-    };
     return NotAsked;
 }());
 exports.NotAsked = NotAsked;
@@ -30,13 +28,11 @@ exports.notAsked = notAsked;
 var Loading = /** @class */ (function () {
     function Loading() {
         this.kind = RemoteDataKind.Loading;
+        this.isNotAsked = function () { return false; };
+        this.isLoading = function () { return true; };
+        this.hasData = function () { return false; };
+        this.hasError = function () { return false; };
     }
-    Loading.prototype.isLoading = function () {
-        return true;
-    };
-    Loading.prototype.hasData = function () {
-        return false;
-    };
     return Loading;
 }());
 exports.Loading = Loading;
@@ -45,13 +41,11 @@ var Reloading = /** @class */ (function () {
     function Reloading(value) {
         this.value = value;
         this.kind = RemoteDataKind.Reloading;
+        this.isNotAsked = function () { return false; };
+        this.isLoading = function () { return true; };
+        this.hasData = function () { return true; };
+        this.hasError = function () { return false; };
     }
-    Reloading.prototype.isLoading = function () {
-        return true;
-    };
-    Reloading.prototype.hasData = function () {
-        return true;
-    };
     return Reloading;
 }());
 exports.Reloading = Reloading;
@@ -80,13 +74,11 @@ var Success = /** @class */ (function () {
     function Success(value) {
         this.value = value;
         this.kind = RemoteDataKind.Success;
+        this.isNotAsked = function () { return false; };
+        this.isLoading = function () { return false; };
+        this.hasData = function () { return true; };
+        this.hasError = function () { return false; };
     }
-    Success.prototype.isLoading = function () {
-        return false;
-    };
-    Success.prototype.hasData = function () {
-        return true;
-    };
     return Success;
 }());
 exports.Success = Success;
@@ -95,33 +87,27 @@ function success(value) {
 }
 exports.success = success;
 var Error = /** @class */ (function () {
-    // tslint:disable-next-line:no-shadowed-variable
     function Error(error) {
         this.error = error;
         this.kind = RemoteDataKind.Error;
+        this.isNotAsked = function () { return false; };
+        this.isLoading = function () { return false; };
+        this.hasData = function () { return false; };
+        this.hasError = function () { return true; };
     }
-    Error.prototype.isLoading = function () {
-        return false;
-    };
-    Error.prototype.hasData = function () {
-        return false;
-    };
     return Error;
 }());
 exports.Error = Error;
 var ErrorWithData = /** @class */ (function () {
-    // tslint:disable-next-line:no-shadowed-variable
     function ErrorWithData(error, value) {
         this.error = error;
         this.value = value;
         this.kind = RemoteDataKind.ErrorWithData;
+        this.isNotAsked = function () { return false; };
+        this.isLoading = function () { return false; };
+        this.hasData = function () { return true; };
+        this.hasError = function () { return true; };
     }
-    ErrorWithData.prototype.isLoading = function () {
-        return false;
-    };
-    ErrorWithData.prototype.hasData = function () {
-        return true;
-    };
     return ErrorWithData;
 }());
 exports.ErrorWithData = ErrorWithData;
