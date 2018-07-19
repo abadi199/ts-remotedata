@@ -9,17 +9,17 @@ export enum RemoteDataKind {
 
 export interface IRemoteData {
   kind: RemoteDataKind;
+  isNotAsked(): boolean;
   isLoading(): boolean;
+  hasError(): boolean;
   hasData(): boolean;
 }
 export class NotAsked implements IRemoteData {
   readonly kind = RemoteDataKind.NotAsked;
-  isLoading() {
-    return false;
-  }
-  hasData() {
-    return false;
-  }
+  isNotAsked = () => true;
+  isLoading = () => false;
+  hasData = () => false;
+  hasError = () => false;
 }
 
 const notAskedConst = new NotAsked();
@@ -30,23 +30,19 @@ export function notAsked(): NotAsked {
 
 export class Loading {
   readonly kind = RemoteDataKind.Loading;
-  isLoading() {
-    return true;
-  }
-  hasData() {
-    return false;
-  }
+  isNotAsked = () => false;
+  isLoading = () => true;
+  hasData = () => false;
+  hasError = () => false;
 }
 const loadingConst = new Loading();
 
 export class Reloading<data> {
   readonly kind = RemoteDataKind.Reloading;
-  isLoading() {
-    return true;
-  }
-  hasData() {
-    return true;
-  }
+  isNotAsked = () => false;
+  isLoading = () => true;
+  hasData = () => true;
+  hasError = () => false;
   constructor(public value: data) {}
 }
 export function loading<data, e>(
@@ -73,12 +69,10 @@ export function loading<data, e>(
 
 export class Success<data> {
   readonly kind = RemoteDataKind.Success;
-  isLoading() {
-    return false;
-  }
-  hasData() {
-    return true;
-  }
+  isNotAsked = () => false;
+  isLoading = () => false;
+  hasData = () => true;
+  hasError = () => false;
   constructor(public value: data) {}
 }
 export function success<data>(value: data): Success<data> {
@@ -87,25 +81,19 @@ export function success<data>(value: data): Success<data> {
 
 export class Error<e> {
   readonly kind = RemoteDataKind.Error;
-  isLoading() {
-    return false;
-  }
-  hasData() {
-    return false;
-  }
-  // tslint:disable-next-line:no-shadowed-variable
+  isNotAsked = () => false;
+  isLoading = () => false;
+  hasData = () => false;
+  hasError = () => true;
   constructor(public error: e) {}
 }
 
 export class ErrorWithData<e, data> {
   readonly kind = RemoteDataKind.ErrorWithData;
-  isLoading() {
-    return false;
-  }
-  hasData() {
-    return true;
-  }
-  // tslint:disable-next-line:no-shadowed-variable
+  isNotAsked = () => false;
+  isLoading = () => false;
+  hasData = () => true;
+  hasError = () => true;
   constructor(public error: e, public value: data) {}
 }
 export function error<e, data>(

@@ -13,7 +13,9 @@ describe("RemoteData", () => {
       console.log(typeof remoteData);
       expect(remoteData.kind).toEqual(RemoteDataKind.NotAsked);
       expect(remoteData.isLoading()).toBeFalsy();
+      expect(remoteData.isNotAsked()).toBeTruthy();
       expect(remoteData.hasData()).toBeFalsy();
+      expect(remoteData.hasError()).toBeFalsy();
     });
   });
   describe("success", () => {
@@ -23,15 +25,19 @@ describe("RemoteData", () => {
       expect(remoteData.kind).toEqual(RemoteDataKind.Success);
       expect(remoteData.value).toEqual(data);
       expect(remoteData.isLoading()).toBeFalsy();
+      expect(remoteData.isNotAsked()).toBeFalsy();
       expect(remoteData.hasData()).toBeTruthy();
+      expect(remoteData.hasError()).toBeFalsy();
     });
   });
   describe("loading", () => {
     it("should create loading when given no argument", () => {
       const remoteData = loading();
       expect(remoteData.kind).toEqual(RemoteDataKind.Loading);
+      expect(remoteData.isNotAsked()).toBeFalsy();
       expect(remoteData.isLoading()).toBeTruthy();
       expect(remoteData.hasData()).toBeFalsy();
+      expect(remoteData.hasError()).toBeFalsy();
     });
     it("should create loading when given notAsked", () => {
       const remoteData = loading(notAsked());
@@ -94,8 +100,10 @@ describe("RemoteData", () => {
       const remoteData = error(errorMessage);
       expect(remoteData.kind).toEqual(RemoteDataKind.Error);
       expect(remoteData.error).toEqual(errorMessage);
+      expect(remoteData.isNotAsked()).toBeFalsy();
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
+      expect(remoteData.hasError()).toBeTruthy();
     });
     it("should create error with no data when given notAsked", () => {
       const remoteData = error(errorMessage, notAsked());
@@ -103,7 +111,7 @@ describe("RemoteData", () => {
       expect(remoteData.error).toEqual(errorMessage);
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
-    }); 
+    });
     it("should create error with no data when given loading", () => {
       const remoteData = error(errorMessage, loading());
       expect(remoteData.kind).toEqual(RemoteDataKind.Error);
