@@ -3,7 +3,8 @@ import {
   RemoteDataKind,
   success,
   failure,
-  notAsked
+  notAsked,
+  RemoteData
 } from "../src/index";
 
 describe("RemoteData", () => {
@@ -17,12 +18,15 @@ describe("RemoteData", () => {
       expect(remoteData.hasError()).toBeFalsy();
     });
   });
+
   describe("success", () => {
     it("should create success with data", () => {
       const data = "Data";
       const remoteData = success(data);
       expect(remoteData.kind).toEqual(RemoteDataKind.Success);
-      expect(remoteData.data).toEqual(data);
+      if (remoteData.hasData()) {
+        expect(remoteData.data).toEqual(data);
+      }
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.isNotAsked()).toBeFalsy();
       expect(remoteData.hasData()).toBeTruthy();
@@ -49,7 +53,16 @@ describe("RemoteData", () => {
       const error = success("Hello World").withDefaultError(defaultError);
       expect(error).toEqual(defaultError);
     });
+
+    it("should be able to access .data after checking for hasData()", () => {
+      const str = "Hello World";
+      const remoteData: RemoteData<string, string> = success(str);
+      if (remoteData.hasData()) {
+        expect(remoteData.data).toEqual(str);
+      }
+    });
   });
+
   describe("loading", () => {
     it("should create loading when given no argument", () => {
       const remoteData = loading();
@@ -113,13 +126,23 @@ describe("RemoteData", () => {
         expect(remoteData.kind).toEqual(RemoteDataKind.Reloading);
       }
     });
+    it("should be able to access .data after checking for hasData()", () => {
+      const str = "Hello World";
+      const remoteData = loading(success(str));
+      if (remoteData.hasData()) {
+        expect(remoteData.data).toEqual(str);
+      }
+    });
   });
+
   describe("error", () => {
     const errorMessage = "Help!";
     it("should create error when given no argument", () => {
       const remoteData = failure(errorMessage);
       expect(remoteData.kind).toEqual(RemoteDataKind.Failure);
-      expect(remoteData.error).toEqual(errorMessage);
+      if (remoteData.hasError()) {
+        expect(remoteData.error).toEqual(errorMessage);
+      }
       expect(remoteData.isNotAsked()).toBeFalsy();
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
@@ -128,14 +151,18 @@ describe("RemoteData", () => {
     it("should create error with no data when given notAsked", () => {
       const remoteData = failure(errorMessage, notAsked());
       expect(remoteData.kind).toEqual(RemoteDataKind.Failure);
-      expect(remoteData.error).toEqual(errorMessage);
+      if (remoteData.hasError()) {
+        expect(remoteData.error).toEqual(errorMessage);
+      }
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
     });
     it("should create error with no data when given loading", () => {
       const remoteData = failure(errorMessage, loading());
       expect(remoteData.kind).toEqual(RemoteDataKind.Failure);
-      expect(remoteData.error).toEqual(errorMessage);
+      if (remoteData.hasError()) {
+        expect(remoteData.error).toEqual(errorMessage);
+      }
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
     });
@@ -166,7 +193,9 @@ describe("RemoteData", () => {
     it("should create error with new message and no data when given error", () => {
       const remoteData = failure(errorMessage, failure("Old Error Message"));
       expect(remoteData.kind).toEqual(RemoteDataKind.Failure);
-      expect(remoteData.error).toEqual(errorMessage);
+      if (remoteData.hasError()) {
+        expect(remoteData.error).toEqual(errorMessage);
+      }
       expect(remoteData.isLoading()).toBeFalsy();
       expect(remoteData.hasData()).toBeFalsy();
     });
@@ -176,11 +205,10 @@ describe("RemoteData", () => {
         errorMessage,
         failure("Old Error Message", success(data))
       );
-      if (remoteData.kind === RemoteDataKind.FailureWithData) {
-        expect(remoteData.error).toEqual(errorMessage);
+      if (remoteData.hasData() && remoteData.hasError()) {
         expect(remoteData.data).toEqual(data);
+        expect(remoteData.error).toEqual(errorMessage);
         expect(remoteData.isLoading()).toBeFalsy();
-        expect(remoteData.hasData()).toBeTruthy();
       } else {
         expect(remoteData.kind).toEqual(RemoteDataKind.FailureWithData);
       }

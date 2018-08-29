@@ -10,9 +10,9 @@ export enum RemoteDataKind {
 export interface IRemoteData<T, E> {
   kind: RemoteDataKind;
   isNotAsked(): boolean;
-  isLoading(): boolean;
-  hasError(): boolean;
-  hasData(): boolean;
+  isLoading(): this is Loading<T, E> | Reloading<T, E>;
+  hasError(): this is Failure<T, E> | FailureWithData<T, E>;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E>;
   map<U>(f: (data: T) => U): RemoteData<U, E>;
   withDefault(data: T): T;
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>;
@@ -21,8 +21,10 @@ export interface IRemoteData<T, E> {
 export class NotAsked<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.NotAsked;
   isNotAsked = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
   isLoading = () => false;
-  hasData = () => false;
   hasError = () => false;
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return notAsked();
@@ -46,7 +48,9 @@ export class Loading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Loading;
   isNotAsked = () => false;
   isLoading = () => true;
-  hasData = () => false;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
   hasError = () => false;
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return loading();
@@ -67,7 +71,9 @@ export class Reloading<T, E> implements IRemoteData<T, E> {
   constructor(public data: T) {}
   isNotAsked = () => false;
   isLoading = () => true;
-  hasData = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   hasError = () => false;
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new Reloading(f(this.data));
@@ -85,7 +91,7 @@ export class Reloading<T, E> implements IRemoteData<T, E> {
 
 export function loading<T, E>(
   previous: RemoteData<T, E> | null = null
-): Loading<T, E> | Reloading<T, E> {
+): RemoteData<T, E> {
   if (previous === null) {
     return new Loading();
   }
@@ -111,7 +117,9 @@ export class Success<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Success;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   hasError = () => false;
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return success(f(this.data));
@@ -127,7 +135,7 @@ export class Success<T, E> implements IRemoteData<T, E> {
   }
 }
 
-export function success<T, E>(value: T): Success<T, E> {
+export function success<T, E>(value: T): RemoteData<T, E> {
   return new Success(value);
 }
 
@@ -136,8 +144,12 @@ export class Failure<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Failure;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => false;
-  hasError = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
+  hasError(): this is Failure<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return failure(this.error);
   }
@@ -157,8 +169,12 @@ export class FailureWithData<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.FailureWithData;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => true;
-  hasError = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
+  hasError(): this is Failure<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new FailureWithData(this.error, f(this.data));
   }
@@ -176,7 +192,7 @@ export class FailureWithData<T, E> implements IRemoteData<T, E> {
 export function failure<T, E>(
   error: E,
   previous: RemoteData<T, E> | null = null
-): Failure<T, E> | FailureWithData<T, E> {
+): RemoteData<T, E> {
   if (previous === null) {
     return new Failure(error);
   }

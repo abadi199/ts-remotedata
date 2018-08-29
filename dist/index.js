@@ -14,9 +14,11 @@ var NotAsked = /** @class */ (function () {
         this.kind = RemoteDataKind.NotAsked;
         this.isNotAsked = function () { return true; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    NotAsked.prototype.hasData = function () {
+        return false;
+    };
     NotAsked.prototype.map = function (_f) {
         return notAsked();
     };
@@ -41,9 +43,11 @@ var Loading = /** @class */ (function () {
         this.kind = RemoteDataKind.Loading;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return true; };
-        this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    Loading.prototype.hasData = function () {
+        return false;
+    };
     Loading.prototype.map = function (_f) {
         return loading();
     };
@@ -65,9 +69,11 @@ var Reloading = /** @class */ (function () {
         this.kind = RemoteDataKind.Reloading;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return true; };
-        this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Reloading.prototype.hasData = function () {
+        return true;
+    };
     Reloading.prototype.map = function (f) {
         return new Reloading(f(this.data));
     };
@@ -111,9 +117,11 @@ var Success = /** @class */ (function () {
         this.kind = RemoteDataKind.Success;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Success.prototype.hasData = function () {
+        return true;
+    };
     Success.prototype.map = function (f) {
         return success(f(this.data));
     };
@@ -139,9 +147,13 @@ var Failure = /** @class */ (function () {
         this.kind = RemoteDataKind.Failure;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return false; };
-        this.hasError = function () { return true; };
     }
+    Failure.prototype.hasData = function () {
+        return false;
+    };
+    Failure.prototype.hasError = function () {
+        return true;
+    };
     Failure.prototype.map = function (_f) {
         return failure(this.error);
     };
@@ -164,9 +176,13 @@ var FailureWithData = /** @class */ (function () {
         this.kind = RemoteDataKind.FailureWithData;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return true; };
-        this.hasError = function () { return true; };
     }
+    FailureWithData.prototype.hasData = function () {
+        return true;
+    };
+    FailureWithData.prototype.hasError = function () {
+        return true;
+    };
     FailureWithData.prototype.map = function (f) {
         return new FailureWithData(this.error, f(this.data));
     };
