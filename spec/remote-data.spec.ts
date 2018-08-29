@@ -17,6 +17,11 @@ describe("RemoteData", () => {
       expect(remoteData.hasData()).toBeFalsy();
       expect(remoteData.hasError()).toBeFalsy();
     });
+    it("should return return nothing", () => {
+      const remoteData: RemoteData<string, string> = notAsked();
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isNothing()).toBeTruthy();
+    });
   });
 
   describe("success", () => {
@@ -60,6 +65,19 @@ describe("RemoteData", () => {
       if (remoteData.hasData()) {
         expect(remoteData.data).toEqual(str);
       }
+    });
+    it("should return return just", () => {
+      const str = "Hello World";
+      const remoteData: RemoteData<string, string> = success(str);
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isJust()).toBeTruthy();
+    });
+    it("should do side effect", () => {
+      const value = { counter: 0 };
+      success("Hello World").do(_ => {
+        value.counter = value.counter + 1;
+      });
+      expect(value.counter).toEqual(1);
     });
   });
 
@@ -132,6 +150,24 @@ describe("RemoteData", () => {
       if (remoteData.hasData()) {
         expect(remoteData.data).toEqual(str);
       }
+    });
+    it("should return return just", () => {
+      const str = "Hello World";
+      const remoteData: RemoteData<string, string> = loading(success(str));
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isJust()).toBeTruthy();
+    });
+    it("should return return nothing", () => {
+      const remoteData: RemoteData<string, string> = loading();
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isNothing()).toBeTruthy();
+    });
+    it("should not do side effect", () => {
+      const value = { counter: 0 };
+      loading().do(_ => {
+        value.counter = value.counter + 1;
+      });
+      expect(value.counter).toEqual(0);
     });
   });
 
@@ -234,6 +270,29 @@ describe("RemoteData", () => {
       const defaultData = "This is a default data";
       const data = failure(err).withDefault(defaultData);
       expect(data).toEqual(defaultData);
+    });
+    it("should not do side effect", () => {
+      const value = { counter: 0 };
+      failure("This is an error").do(_ => {
+        value.counter = value.counter + 1;
+      });
+      expect(value.counter).toEqual(0);
+    });
+    it("should return return just", () => {
+      const str = "Hello World";
+      const remoteData: RemoteData<string, string> = failure(
+        "This is an error",
+        success(str)
+      );
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isJust()).toBeTruthy();
+    });
+    it("should return return nothing", () => {
+      const remoteData: RemoteData<string, string> = failure(
+        "This is an error"
+      );
+      const maybe = remoteData.toMaybe();
+      expect(maybe.isNothing()).toBeTruthy();
     });
   });
 });

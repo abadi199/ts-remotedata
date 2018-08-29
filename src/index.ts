@@ -1,3 +1,5 @@
+import { Maybe, nothing, just } from "@abadi199/maybe";
+
 export enum RemoteDataKind {
   NotAsked = 1,
   Loading = 2,
@@ -17,6 +19,8 @@ export interface IRemoteData<T, E> {
   withDefault(data: T): T;
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>;
   withDefaultError(error: E): E;
+  do(f: (data: T) => void): RemoteData<T, E>;
+  toMaybe(): Maybe<T>;
 }
 export class NotAsked<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.NotAsked;
@@ -37,6 +41,12 @@ export class NotAsked<T, E> implements IRemoteData<T, E> {
   }
   withDefaultError(error: E): E {
     return error;
+  }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
   }
 }
 
@@ -64,6 +74,12 @@ export class Loading<T, E> implements IRemoteData<T, E> {
   withDefaultError(error: E): E {
     return error;
   }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
+  }
 }
 
 export class Reloading<T, E> implements IRemoteData<T, E> {
@@ -86,6 +102,13 @@ export class Reloading<T, E> implements IRemoteData<T, E> {
   }
   withDefaultError(error: E): E {
     return error;
+  }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
   }
 }
 
@@ -133,6 +156,13 @@ export class Success<T, E> implements IRemoteData<T, E> {
   withDefaultError(error: E): E {
     return error;
   }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
+  }
 }
 
 export function success<T, E>(value: T): RemoteData<T, E> {
@@ -162,6 +192,12 @@ export class Failure<T, E> implements IRemoteData<T, E> {
   withDefaultError(_error: E): E {
     return this.error;
   }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
+  }
 }
 
 export class FailureWithData<T, E> implements IRemoteData<T, E> {
@@ -186,6 +222,13 @@ export class FailureWithData<T, E> implements IRemoteData<T, E> {
   }
   withDefaultError(_error: E): E {
     return this.error;
+  }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
   }
 }
 

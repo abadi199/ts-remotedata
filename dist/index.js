@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var maybe_1 = require("@abadi199/maybe");
 var RemoteDataKind;
 (function (RemoteDataKind) {
     RemoteDataKind[RemoteDataKind["NotAsked"] = 1] = "NotAsked";
@@ -31,6 +32,12 @@ var NotAsked = /** @class */ (function () {
     NotAsked.prototype.withDefaultError = function (error) {
         return error;
     };
+    NotAsked.prototype.do = function (_) {
+        return this;
+    };
+    NotAsked.prototype.toMaybe = function () {
+        return maybe_1.nothing();
+    };
     return NotAsked;
 }());
 exports.NotAsked = NotAsked;
@@ -60,6 +67,12 @@ var Loading = /** @class */ (function () {
     Loading.prototype.withDefaultError = function (error) {
         return error;
     };
+    Loading.prototype.do = function (_) {
+        return this;
+    };
+    Loading.prototype.toMaybe = function () {
+        return maybe_1.nothing();
+    };
     return Loading;
 }());
 exports.Loading = Loading;
@@ -85,6 +98,13 @@ var Reloading = /** @class */ (function () {
     };
     Reloading.prototype.withDefaultError = function (error) {
         return error;
+    };
+    Reloading.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    Reloading.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
     };
     return Reloading;
 }());
@@ -134,6 +154,13 @@ var Success = /** @class */ (function () {
     Success.prototype.withDefaultError = function (error) {
         return error;
     };
+    Success.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    Success.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
+    };
     return Success;
 }());
 exports.Success = Success;
@@ -166,6 +193,12 @@ var Failure = /** @class */ (function () {
     Failure.prototype.withDefaultError = function (_error) {
         return this.error;
     };
+    Failure.prototype.do = function (_) {
+        return this;
+    };
+    Failure.prototype.toMaybe = function () {
+        return maybe_1.nothing();
+    };
     return Failure;
 }());
 exports.Failure = Failure;
@@ -194,6 +227,13 @@ var FailureWithData = /** @class */ (function () {
     };
     FailureWithData.prototype.withDefaultError = function (_error) {
         return this.error;
+    };
+    FailureWithData.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    FailureWithData.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
     };
     return FailureWithData;
 }());
