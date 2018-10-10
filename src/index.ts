@@ -11,14 +11,15 @@ export interface IRemoteData<T, E> {
   kind: RemoteDataKind;
   isNotAsked(): boolean;
   isLoading(): boolean;
+  isSuccess(): boolean;
   hasError(): boolean;
   hasData(): boolean;
   map<U>(f: (data: T) => U): RemoteData<U, E>;
-  withDefault(data: T): T;
+  withDefault(defaultData: T): T;
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>;
   withDefaultError(error: E): E;
 }
-export class NotAsked<T, E> implements IRemoteData<T, E> {
+class NotAsked<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.NotAsked;
   isNotAsked = () => true;
   isLoading = () => false;
@@ -27,8 +28,8 @@ export class NotAsked<T, E> implements IRemoteData<T, E> {
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return notAsked();
   }
-  withDefault(data: T) {
-    return data;
+  withDefault(defaultData: T) {
+    return defaultData;
   }
   mapError<E2>(_f: (error: E) => E2): RemoteData<T, E2> {
     return notAsked();
@@ -42,7 +43,7 @@ export function notAsked<T, E>(): NotAsked<T, E> {
   return new NotAsked<T, E>();
 }
 
-export class Loading<T, E> implements IRemoteData<T, E> {
+class Loading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Loading;
   isNotAsked = () => false;
   isLoading = () => true;
@@ -51,8 +52,8 @@ export class Loading<T, E> implements IRemoteData<T, E> {
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return loading();
   }
-  withDefault(data: T) {
-    return data;
+  withDefault(defaultData: T) {
+    return defaultData;
   }
   mapError<E2>(_f: (error: E) => E2): RemoteData<T, E2> {
     return loading();
@@ -62,7 +63,7 @@ export class Loading<T, E> implements IRemoteData<T, E> {
   }
 }
 
-export class Reloading<T, E> implements IRemoteData<T, E> {
+class Reloading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Reloading;
   constructor(public data: T) {}
   isNotAsked = () => false;
@@ -72,7 +73,7 @@ export class Reloading<T, E> implements IRemoteData<T, E> {
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new Reloading(f(this.data));
   }
-  withDefault(_data: T) {
+  withDefault(_defaultData: T) {
     return this.data;
   }
   mapError<E2>(_f: (error: E) => E2): RemoteData<T, E2> {
@@ -106,7 +107,7 @@ export function loading<T, E>(
   return loading();
 }
 
-export class Success<T, E> implements IRemoteData<T, E> {
+class Success<T, E> implements IRemoteData<T, E> {
   constructor(public data: T) {}
   readonly kind = RemoteDataKind.Success;
   isNotAsked = () => false;
@@ -131,7 +132,7 @@ export function success<T, E>(value: T): Success<T, E> {
   return new Success(value);
 }
 
-export class Failure<T, E> implements IRemoteData<T, E> {
+class Failure<T, E> implements IRemoteData<T, E> {
   constructor(public error: E) {}
   readonly kind = RemoteDataKind.Failure;
   isNotAsked = () => false;
@@ -141,8 +142,8 @@ export class Failure<T, E> implements IRemoteData<T, E> {
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return failure(this.error);
   }
-  withDefault(data: T) {
-    return data;
+  withDefault(defaultData: T) {
+    return defaultData;
   }
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2> {
     return failure(f(this.error));
@@ -152,7 +153,7 @@ export class Failure<T, E> implements IRemoteData<T, E> {
   }
 }
 
-export class FailureWithData<T, E> implements IRemoteData<T, E> {
+class FailureWithData<T, E> implements IRemoteData<T, E> {
   constructor(public error: E, public data: T) {}
   readonly kind = RemoteDataKind.FailureWithData;
   isNotAsked = () => false;
@@ -162,7 +163,7 @@ export class FailureWithData<T, E> implements IRemoteData<T, E> {
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new FailureWithData(this.error, f(this.data));
   }
-  withDefault(_data: T) {
+  withDefault(_defaultData: T) {
     return this.data;
   }
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2> {

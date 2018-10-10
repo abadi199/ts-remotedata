@@ -2,7 +2,20 @@
 Inspired by Kris Jenkin's Elm RemoteData package and his blog post:
 http://blog.jenkster.com/2016/06/how-elm-slays-a-ui-antipattern.html
 
-## Example
+`RemoteData` is implemented using TypeScript's Discriminated Union (See: https://www.typescriptlang.org/docs/handbook/advanced-types.html)
+
+It's a data type used to represent possible state in data that come from remote server such as API call. All possible state of the data is:
+
+- `NotAsked` User has not make the request to fetch the data yet.
+- `Loading` User has make an initial request to fetch the data, so the program is waiting for the request to be completed. 
+- `Reloading` User has make another request to fetch the data, but the program already have data from previous request.
+- `Error` There's an error from previous request, which typically mean http request, but can also be data validation error, or any other kind of error. 
+- `ErrorWithData` Similar to `Error`, but the program contain data from previous successful request. 
+- `Success` User has make a successful request, and now the program has the data.
+
+Since `RemoteData` is a Discrimated Union, it has the property `kind` as the *discriminant* or *tag*, and you can use it inside a `switch` statement to narrow down the type. (See [Example using Switch](##Example using Switch))
+
+## Example using Switch
 ```ts
 function renderFruits(RemoteData<string[], string> fruits) {
     switch (fruits.kind) {
@@ -25,7 +38,7 @@ function renderFruits(RemoteData<string[], string> fruits) {
         renderSuccess(fruits.value);
         break;
     }
-} 
+}
 
 function main() {
     renderFruits(success(["Apple", "Orange", "Mango"])); // Success
@@ -35,6 +48,117 @@ function main() {
     renderFruits(error("", success(["Apple", "Orange", "Mango"]))); // ErrorWithData
 }
 ```
+
+## Constructor Function
+
+### `notAsked()`
+
+TBA
+
+#### Example
+```
+```
+
+### `success()`
+
+TBA
+
+#### Example
+```
+```
+
+### `loading()`
+
+TBA
+
+#### Example
+```
+```
+
+### `failture()`
+
+TBA
+
+#### Example
+```
+```
+
+## Method
+
+### `map<U>(f: (data: T) => U): RemoteData<U, E>`
+
+TBA
+
+#### Example
+```
+```
+
+### `withDefault(defaultData: T): T`
+
+TBA
+
+#### Example
+```
+```
+
+### `isSuccess(): boolean`
+
+TBA
+
+#### Example
+```
+```
+
+### `isNotAsked(): boolean`
+
+TBA
+
+#### Example
+```
+```
+
+### `isLoading(): boolean`
+
+
+TBA
+
+#### Example
+```
+```
+
+### `hasError(): boolean`
+
+TBA
+
+#### Example
+```
+```
+
+### `hasData(): boolean`
+
+
+TBA
+
+#### Example
+```
+```
+
+### `mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>`
+
+TBA
+
+#### Example
+```
+```
+
+### `withDefaultError(error: E): E`
+
+TBA
+
+#### Example
+```
+```
+
 
 ## Install
 ```
