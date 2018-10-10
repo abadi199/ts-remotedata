@@ -159,6 +159,22 @@ TBA
 ```
 ```
 
+### `do(f: (data: T) => void): RemoteData<T, E>`
+
+TBA
+
+#### Example 
+```
+```
+
+### `toMaybe(): Maybe<T>`
+
+TBA
+
+### Example
+```
+```
+
 
 ## Install
 ```

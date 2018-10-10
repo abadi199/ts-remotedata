@@ -1,3 +1,5 @@
+import { Maybe, nothing, just } from "@abadi199/maybe";
+
 export enum RemoteDataKind {
   NotAsked = 1,
   Loading = 2,
@@ -10,20 +12,24 @@ export enum RemoteDataKind {
 export interface IRemoteData<T, E> {
   kind: RemoteDataKind;
   isNotAsked(): boolean;
-  isLoading(): boolean;
-  isSuccess(): boolean;
-  hasError(): boolean;
-  hasData(): boolean;
+  isLoading(): this is Loading<T, E> | Reloading<T, E>;
+  hasError(): this is Failure<T, E> | FailureWithData<T, E>;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E>;
+  isSuccess(): this is Success<T, E>;
   map<U>(f: (data: T) => U): RemoteData<U, E>;
   withDefault(defaultData: T): T;
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>;
   withDefaultError(error: E): E;
+  do(f: (data: T) => void): RemoteData<T, E>;
+  toMaybe(): Maybe<T>;
 }
 class NotAsked<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.NotAsked;
   isNotAsked = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
   isLoading = () => false;
-  hasData = () => false;
   hasError = () => false;
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return notAsked();
@@ -36,6 +42,12 @@ class NotAsked<T, E> implements IRemoteData<T, E> {
   }
   withDefaultError(error: E): E {
     return error;
+  }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
   }
 }
 
@@ -47,7 +59,9 @@ class Loading<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Loading;
   isNotAsked = () => false;
   isLoading = () => true;
-  hasData = () => false;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
   hasError = () => false;
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return loading();
@@ -61,6 +75,12 @@ class Loading<T, E> implements IRemoteData<T, E> {
   withDefaultError(error: E): E {
     return error;
   }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
+  }
 }
 
 class Reloading<T, E> implements IRemoteData<T, E> {
@@ -68,7 +88,9 @@ class Reloading<T, E> implements IRemoteData<T, E> {
   constructor(public data: T) {}
   isNotAsked = () => false;
   isLoading = () => true;
-  hasData = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   hasError = () => false;
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new Reloading(f(this.data));
@@ -82,29 +104,36 @@ class Reloading<T, E> implements IRemoteData<T, E> {
   withDefaultError(error: E): E {
     return error;
   }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
+  }
 }
 
 export function loading<T, E>(
   previous: RemoteData<T, E> | null = null
-): Loading<T, E> | Reloading<T, E> {
+): RemoteData<T, E> {
   if (previous === null) {
-    return loading();
+    return new Loading();
   }
   switch (previous.kind) {
     case RemoteDataKind.Failure:
-      return loading();
+      return new Loading();
     case RemoteDataKind.FailureWithData:
       return new Reloading(previous.data);
     case RemoteDataKind.Loading:
       return previous;
     case RemoteDataKind.NotAsked:
-      return loading();
+      return new Loading();
     case RemoteDataKind.Reloading:
       return previous;
     case RemoteDataKind.Success:
       return new Reloading(previous.data);
   }
-  return loading();
+  return new Loading();
 }
 
 class Success<T, E> implements IRemoteData<T, E> {
@@ -112,7 +141,9 @@ class Success<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Success;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   hasError = () => false;
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return success(f(this.data));
@@ -126,9 +157,16 @@ class Success<T, E> implements IRemoteData<T, E> {
   withDefaultError(error: E): E {
     return error;
   }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
+  }
 }
 
-export function success<T, E>(value: T): Success<T, E> {
+export function success<T, E>(value: T): RemoteData<T, E> {
   return new Success(value);
 }
 
@@ -137,8 +175,12 @@ class Failure<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.Failure;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => false;
-  hasError = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return false;
+  }
+  hasError(): this is Failure<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   map<U>(_f: (data: T) => U): RemoteData<U, E> {
     return failure(this.error);
   }
@@ -151,6 +193,12 @@ class Failure<T, E> implements IRemoteData<T, E> {
   withDefaultError(_error: E): E {
     return this.error;
   }
+  do(_: (data: T) => void): RemoteData<T, E> {
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return nothing();
+  }
 }
 
 class FailureWithData<T, E> implements IRemoteData<T, E> {
@@ -158,8 +206,12 @@ class FailureWithData<T, E> implements IRemoteData<T, E> {
   readonly kind = RemoteDataKind.FailureWithData;
   isNotAsked = () => false;
   isLoading = () => false;
-  hasData = () => true;
-  hasError = () => true;
+  hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E> {
+    return true;
+  }
+  hasError(): this is Failure<T, E> | FailureWithData<T, E> {
+    return true;
+  }
   map<U>(f: (data: T) => U): RemoteData<U, E> {
     return new FailureWithData(this.error, f(this.data));
   }
@@ -172,12 +224,19 @@ class FailureWithData<T, E> implements IRemoteData<T, E> {
   withDefaultError(_error: E): E {
     return this.error;
   }
+  do(f: (data: T) => void): RemoteData<T, E> {
+    f(this.data);
+    return this;
+  }
+  toMaybe(): Maybe<T> {
+    return just(this.data);
+  }
 }
 
 export function failure<T, E>(
   error: E,
   previous: RemoteData<T, E> | null = null
-): Failure<T, E> | FailureWithData<T, E> {
+): RemoteData<T, E> {
   if (previous === null) {
     return new Failure(error);
   }

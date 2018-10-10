@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var maybe_1 = require("@abadi199/maybe");
 var RemoteDataKind;
 (function (RemoteDataKind) {
     RemoteDataKind[RemoteDataKind["NotAsked"] = 1] = "NotAsked";
@@ -14,9 +15,11 @@ var NotAsked = /** @class */ (function () {
         this.kind = RemoteDataKind.NotAsked;
         this.isNotAsked = function () { return true; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    NotAsked.prototype.hasData = function () {
+        return false;
+    };
     NotAsked.prototype.map = function (_f) {
         return notAsked();
     };
@@ -28,6 +31,12 @@ var NotAsked = /** @class */ (function () {
     };
     NotAsked.prototype.withDefaultError = function (error) {
         return error;
+    };
+    NotAsked.prototype.do = function (_) {
+        return this;
+    };
+    NotAsked.prototype.toMaybe = function () {
+        return maybe_1.nothing();
     };
     return NotAsked;
 }());
@@ -41,9 +50,11 @@ var Loading = /** @class */ (function () {
         this.kind = RemoteDataKind.Loading;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return true; };
-        this.hasData = function () { return false; };
         this.hasError = function () { return false; };
     }
+    Loading.prototype.hasData = function () {
+        return false;
+    };
     Loading.prototype.map = function (_f) {
         return loading();
     };
@@ -56,6 +67,12 @@ var Loading = /** @class */ (function () {
     Loading.prototype.withDefaultError = function (error) {
         return error;
     };
+    Loading.prototype.do = function (_) {
+        return this;
+    };
+    Loading.prototype.toMaybe = function () {
+        return maybe_1.nothing();
+    };
     return Loading;
 }());
 exports.Loading = Loading;
@@ -65,9 +82,11 @@ var Reloading = /** @class */ (function () {
         this.kind = RemoteDataKind.Reloading;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return true; };
-        this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Reloading.prototype.hasData = function () {
+        return true;
+    };
     Reloading.prototype.map = function (f) {
         return new Reloading(f(this.data));
     };
@@ -80,29 +99,36 @@ var Reloading = /** @class */ (function () {
     Reloading.prototype.withDefaultError = function (error) {
         return error;
     };
+    Reloading.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    Reloading.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
+    };
     return Reloading;
 }());
 exports.Reloading = Reloading;
 function loading(previous) {
     if (previous === void 0) { previous = null; }
     if (previous === null) {
-        return loading();
+        return new Loading();
     }
     switch (previous.kind) {
         case RemoteDataKind.Failure:
-            return loading();
+            return new Loading();
         case RemoteDataKind.FailureWithData:
             return new Reloading(previous.data);
         case RemoteDataKind.Loading:
             return previous;
         case RemoteDataKind.NotAsked:
-            return loading();
+            return new Loading();
         case RemoteDataKind.Reloading:
             return previous;
         case RemoteDataKind.Success:
             return new Reloading(previous.data);
     }
-    return loading();
+    return new Loading();
 }
 exports.loading = loading;
 var Success = /** @class */ (function () {
@@ -111,9 +137,11 @@ var Success = /** @class */ (function () {
         this.kind = RemoteDataKind.Success;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return true; };
         this.hasError = function () { return false; };
     }
+    Success.prototype.hasData = function () {
+        return true;
+    };
     Success.prototype.map = function (f) {
         return success(f(this.data));
     };
@@ -125,6 +153,13 @@ var Success = /** @class */ (function () {
     };
     Success.prototype.withDefaultError = function (error) {
         return error;
+    };
+    Success.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    Success.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
     };
     return Success;
 }());
@@ -139,9 +174,13 @@ var Failure = /** @class */ (function () {
         this.kind = RemoteDataKind.Failure;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return false; };
-        this.hasError = function () { return true; };
     }
+    Failure.prototype.hasData = function () {
+        return false;
+    };
+    Failure.prototype.hasError = function () {
+        return true;
+    };
     Failure.prototype.map = function (_f) {
         return failure(this.error);
     };
@@ -154,6 +193,12 @@ var Failure = /** @class */ (function () {
     Failure.prototype.withDefaultError = function (_error) {
         return this.error;
     };
+    Failure.prototype.do = function (_) {
+        return this;
+    };
+    Failure.prototype.toMaybe = function () {
+        return maybe_1.nothing();
+    };
     return Failure;
 }());
 exports.Failure = Failure;
@@ -164,9 +209,13 @@ var FailureWithData = /** @class */ (function () {
         this.kind = RemoteDataKind.FailureWithData;
         this.isNotAsked = function () { return false; };
         this.isLoading = function () { return false; };
-        this.hasData = function () { return true; };
-        this.hasError = function () { return true; };
     }
+    FailureWithData.prototype.hasData = function () {
+        return true;
+    };
+    FailureWithData.prototype.hasError = function () {
+        return true;
+    };
     FailureWithData.prototype.map = function (f) {
         return new FailureWithData(this.error, f(this.data));
     };
@@ -178,6 +227,13 @@ var FailureWithData = /** @class */ (function () {
     };
     FailureWithData.prototype.withDefaultError = function (_error) {
         return this.error;
+    };
+    FailureWithData.prototype.do = function (f) {
+        f(this.data);
+        return this;
+    };
+    FailureWithData.prototype.toMaybe = function () {
+        return maybe_1.just(this.data);
     };
     return FailureWithData;
 }());

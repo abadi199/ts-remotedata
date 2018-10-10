@@ -1,6 +1,6 @@
 {
   "name": "@abadi199/remotedata",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "A DataType Representing Remote Data",
   "main": "dist/index.js",
   "types": "src/index.ts",
@@ -20,5 +20,8 @@
     "jasmine-core": "^3.1.0",
     "jasmine-ts": "^0.2.1",
     "typescript": "^2.9.1"
+  },
+  "dependencies": {
+    "@abadi199/maybe": "^1.1.1"
   }
 }
