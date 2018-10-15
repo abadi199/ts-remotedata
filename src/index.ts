@@ -15,7 +15,6 @@ export interface IRemoteData<T, E> {
   isLoading(): this is Loading<T, E> | Reloading<T, E>;
   hasError(): this is Failure<T, E> | FailureWithData<T, E>;
   hasData(): this is Reloading<T, E> | Success<T, E> | FailureWithData<T, E>;
-  isSuccess(): this is Success<T, E>;
   map<U>(f: (data: T) => U): RemoteData<U, E>;
   withDefault(defaultData: T): T;
   mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>;

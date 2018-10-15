@@ -7,10 +7,10 @@ http://blog.jenkster.com/2016/06/how-elm-slays-a-ui-antipattern.html
 It's a data type used to represent possible state in data that come from remote server such as API call. All possible state of the data is:
 
 - `NotAsked` User has not make the request to fetch the data yet.
-- `Loading` User has make an initial request to fetch the data, so the program is waiting for the request to be completed. 
+- `Loading` User has make an initial request to fetch the data, so the program is waiting for the request to be completed.
 - `Reloading` User has make another request to fetch the data, but the program already have data from previous request.
-- `Error` There's an error from previous request, which typically mean http request, but can also be data validation error, or any other kind of error. 
-- `ErrorWithData` Similar to `Error`, but the program contain data from previous successful request. 
+- `Error` There's an error from previous request, which typically mean http request, but can also be data validation error, or any other kind of error.
+- `ErrorWithData` Similar to `Error`, but the program contain data from previous successful request.
 - `Success` User has make a successful request, and now the program has the data.
 
 Since `RemoteData` is a Discrimated Union, it has the property `kind` as the *discriminant* or *tag*, and you can use it inside a `switch` statement to narrow down the type. (See [Example using Switch](##Example using Switch))
@@ -51,36 +51,61 @@ function main() {
 
 ## Constructor Function
 
-### `notAsked()`
+### `notAsked<T, E>()`
 
-TBA
-
-#### Example
-```
-```
-
-### `success()`
-
-TBA
+Create a `RemoteData` with not asked state.
 
 #### Example
-```
+```ts
+const userProfile = notAsked(); // NotAsked
 ```
 
-### `loading()`
+### `success<T, E>(data: T)`
 
-TBA
+Create a `RemoteData` with success state with the given data
 
 #### Example
-```
+```ts
+const userProfile = success({
+  id: 1,
+  username: "jane",
+  firstName: "Jane",
+  lastName: "Doe"
+}); // Success
 ```
 
-### `failture()`
+### `loading<T, E>(previous: RemoteData<T, E>)`
 
-TBA
+Create a `RemoteData` with loading state. If previous `RemoteData` is given as an argument, it will create a reloading state.
 
 #### Example
+```ts
+const userProfile1 = loading(); // Loading
+
+const oldUserProfile = success({
+  id: 1,
+  username: "jane",
+  firstName: "Jane",
+  lastName: "Doe"
+}); // Success
+const userProfile2 = loading(oldUserProfile); // Reloading
 ```
+
+### `failure<T, E>(error: E, previous: RemoteData<T, E>)`
+
+Create a `RemoteData` with failure state with the given error data. If previous `RemoteData` is given as an argument, it will create an error with data.
+
+#### Example
+```ts
+const error = failure("Unable to load user profile!"); // Failure
+
+const userProfile = success({
+  id: 1,
+  username: "jane",
+  firstName: "Jane",
+  lastName: "Doe"
+});
+const errorWithUserProfile = failure("Unable to update user profile",  userProfile); // FailureWithData
 ```
 
 ## Method
@@ -90,7 +115,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `withDefault(defaultData: T): T`
@@ -98,7 +123,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `isSuccess(): boolean`
@@ -106,7 +131,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `isNotAsked(): boolean`
@@ -114,7 +139,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `isLoading(): boolean`
@@ -123,7 +148,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `hasError(): boolean`
@@ -131,7 +156,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `hasData(): boolean`
@@ -140,7 +165,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `mapError<E2>(f: (error: E) => E2): RemoteData<T, E2>`
@@ -148,7 +173,7 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `withDefaultError(error: E): E`
@@ -156,15 +181,15 @@ TBA
 TBA
 
 #### Example
-```
+```ts
 ```
 
 ### `do(f: (data: T) => void): RemoteData<T, E>`
 
 TBA
 
-#### Example 
-```
+#### Example
+```ts
 ```
 
 ### `toMaybe(): Maybe<T>`
@@ -172,7 +197,7 @@ TBA
 TBA
 
 ### Example
-```
+```ts
 ```
 
 
